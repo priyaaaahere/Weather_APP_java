@@ -1,58 +1,49 @@
-import com.google.gson.gson;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import com.google.gson.JsonParser;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
 
 public class WeatherApp {
-  private static final String APIKEY = "";
-  private static final String APIURL = "";
-  private static final String APIUNITS = "metric";
+    public static void main(String[] args) {
+        Map<String, String> weatherData = new HashMap<>();
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader("weatherdata.txt"));
+            String line;
 
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length >= 2) {
+                    String city = parts[0].trim();
+                    String data = parts[1].trim();
+                    weatherData.put(city, data); 
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading weatherdata.txt: " + e.getMessage());
+            return;
+        }
 
-  public static void main(String[] args) {
-    String Location = "";
+        Scanner scanner = new Scanner(System.in);
 
-    try {
-      WeatherData weatherData = getWeatherData(Location);
-      displayWeather(weatherData);
+        while (true) {
+            System.out.print("Enter a city name (or 'exit' to quit): ");
+            String userInput = scanner.nextLine();
 
-    } catch (IOException e) {
-      e.printStackTrace();
+            if (userInput.equalsIgnoreCase("exit")) {
+                break;
+            }
+
+            String cityData = weatherData.get(userInput);
+
+            if (cityData != null) {
+                System.out.println("Weather data for " + userInput + ": " + cityData);
+            } else {
+                System.out.println("City not found in the data.");
+            }
+        }
+
+        scanner.close();
     }
 }
-private static <Gson> WeatherData getWeatherData(String Location) throws IOException{
-  String apiURL = String.format("%s?q=%s&units=%s&appid=%s",APIURL,Location,APIUNITS,APIKEY);
-
-  // URL url = new URL(apiURL);
-  // HttpURLConnection connection = (HttpURLConnection)url.openUrlConnection();
-
-  URL url = new URL(apiURL);
-HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-
-  if (connection.getResponseCode() == 200) {
-    Gson gson = new Gson();
-    InputStreamReader reader = new InputStreamReader(connection.getInputStream());
-    WeatherData weatherData = gson.fromJson(reader, WeatherData.class);
-    reader.close();
-    return weatherData;
-} else {
-    throw new IOException("Unable to fetch weather data.");
-}
-}
-
-private static void displayWeather(WeatherData weatherData) {
-if (weatherData != null) {
-    System.out.println("Weather in " + weatherData.getCityName() + ":");
-    System.out.println("Temperature: " + weatherData.getTemperature() + "°C");
-    System.out.println("Description: " + weatherData.getWeatherDescription());
-} else {
-    System.out.println("Weather data not available for the specified location.");
-}
-}
-}
-
-
-
